@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "feeleaks-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Personal projects/FeeLeaks/node_modules/next/dist/bin/next", "dev", "C:/Personal projects/FeeLeaks"],
+      "port": 3000
+    }
+  ]
+}
