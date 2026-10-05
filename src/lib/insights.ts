@@ -67,7 +67,8 @@ function breakdown(reports: ReportWithInstitution[], keyOf: (r: ReportWithInstit
       reportCount: group.length,
       institutionCount: new Set(group.map((r) => r.institutionId)).size,
       medianYearOne: median(numbers(group.map(yearOneCost))),
-      medianHike: median(numbers(group.map((r) => r.hikePercent))),
+      // Each institution's latest typical hike, then the middle of those.
+      medianHike: median(numbers(groupByInstitution(group).map((row) => row.summary.hikes.at(-1)?.medianHike ?? null))),
     }))
     .sort((a, b) => b.reportCount - a.reportCount);
 }
