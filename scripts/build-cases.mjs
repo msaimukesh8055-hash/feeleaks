@@ -31,10 +31,11 @@ for (const line of lines) {
   if (!inCases || !region) continue;
   const heading = /^### (\d+)\. (.+)$/.exec(line);
   if (heading) {
-    current = { number: Number(heading[1]), title: heading[2].trim(), region, lines: [] };
+    current = { number: Number(heading[1]), title: heading[2].trim(), region, quotes: [], lines: [] };
     cases.push(current);
     continue;
   }
+  if (current && line.startsWith("> ")) current.quotes.push(line.slice(2));
   if (current && line.startsWith("- ")) current.lines.push(line.slice(2));
 }
 
@@ -45,6 +46,7 @@ export type PublicCase = {
   number: number;
   title: string; // markdown
   region: string;
+  quotes: string[]; // parents' exact words as printed by the named source (markdown)
   lines: string[]; // markdown
 };
 

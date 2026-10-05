@@ -25,7 +25,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const nq = normaliseName(q);
   const caseResults = q
     ? PUBLIC_CASES.filter((c) =>
-        normaliseName(stripMarkdown([c.title, c.region, ...c.lines].join(" "))).includes(nq),
+        normaliseName(stripMarkdown([c.title, c.region, ...c.quotes, ...c.lines].join(" "))).includes(nq),
       )
     : [];
 
