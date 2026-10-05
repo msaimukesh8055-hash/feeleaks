@@ -63,7 +63,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
           <ul className="space-y-2">
             {caseResults.map((c) => (
               <li key={c.number}>
-                <Link href={`/cases#case-${c.number}`} className={`${cardClass} block text-sm hover:border-muted`}>
+                <Link href={`/cases/${c.number}`} className={`${cardClass} block text-sm hover:border-muted`}>
                   <InlineMarkdown text={c.title} />
                 </Link>
               </li>

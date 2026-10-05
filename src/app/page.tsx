@@ -55,7 +55,7 @@ export default async function Home(props: PageProps<"/">) {
         <ul className="grid gap-2 sm:grid-cols-2">
           {PUBLISHED_CASES.slice(0, 6).map((c) => (
             <li key={c.number}>
-              <Link href={`/cases#case-${c.number}`} className={`${cardClass} block text-sm hover:border-muted`}>
+              <Link href={`/cases/${c.number}`} className={`${cardClass} block text-sm hover:border-muted`}>
                 <span className="block italic">“{c.words[0]}”</span>
                 <span className="mt-1 block text-xs text-muted">
                   <InlineMarkdown text={c.title} />

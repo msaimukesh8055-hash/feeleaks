@@ -120,6 +120,7 @@ Parents choosing and enrolled parents bring the volume; journalists and parent a
 - **Report:** story, breakdown, flags, evidence, "Me too", email button, "Your options"
 - **Institution page:** every report, declared vs reported fee, all-in year-one cost by class/course and year, hidden-extras share, hike trend vs inflation, evidence and "Me too" counts, follow button, "Your options"
 - **Take action:** letter and RTI generator
+- **In parents' words:** named schools with parents' exact words (as printed by news sources, kept on file), filter by region, Reddit-style up/down votes and threaded comments under anonymous names (Oct 5, 2026)
 - **Dashboard:** most expensive, steepest hikes vs inflation, most flagged (capitation, no receipt…), by city and type, totals reported
 - **Search:** by institution name or city
 - **About / disclaimer:** "reports are submitted by users and not verified by FeeLeaks"; how rules and declared fees are sourced

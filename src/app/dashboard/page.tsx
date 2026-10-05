@@ -4,7 +4,10 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
+import { stripMarkdown } from "@/components/inline-markdown";
 import { RankedBars, type RankedRow } from "@/components/ranked-bars";
+import { PUBLISHED_CASES, REGIONS, regionSlug } from "@/data/published-cases";
+import { caseTarget, statsFor } from "@/lib/discussion";
 import { cardClass, inputClass } from "@/components/ui";
 import { formatPercent, formatRupeesShort } from "@/lib/fees";
 import { byCity, byType, groupByInstitution, siteTotals, type BreakdownRow } from "@/lib/insights";
@@ -96,10 +99,83 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       note: `"Me too" confirmations across ${summary.reportCount} report${summary.reportCount === 1 ? "" : "s"}`,
     }));
 
+  const caseStats = await statsFor(PUBLISHED_CASES.map((c) => caseTarget(c.number)));
+  const caseRows = PUBLISHED_CASES.map((c) => ({ c, s: caseStats[caseTarget(c.number)] }));
+  const totalVotes = caseRows.reduce((sum, r) => sum + r.s.score, 0);
+  const totalComments = caseRows.reduce((sum, r) => sum + r.s.comments, 0);
+  const caseBars = (metric: "score" | "comments", unit: string): RankedRow[] =>
+    caseRows
+      .filter((r) => r.s[metric] > 0)
+      .sort((a, b) => b.s[metric] - a.s[metric])
+      .slice(0, TOP)
+      .map(({ c, s }) => ({
+        key: String(c.number),
+        label: stripMarkdown(c.title),
+        href: `/cases/${c.number}`,
+        value: s[metric],
+        display: String(s[metric]),
+        note: `${s[metric]} ${unit} · “${c.words[0].slice(0, 80)}${c.words[0].length > 80 ? "…" : ""}”`,
+      }));
+  const regionRows = REGIONS.map((region) => {
+    const rows = caseRows.filter((r) => r.c.region === region);
+    return {
+      region,
+      schools: rows.length,
+      quotes: rows.reduce((n, r) => n + r.c.words.length, 0),
+      votes: rows.reduce((n, r) => n + r.s.score, 0),
+      comments: rows.reduce((n, r) => n + r.s.comments, 0),
+    };
+  }).sort((a, b) => b.schools - a.schools);
+
   return (
     <div className="space-y-8">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">In parents&apos; words</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Tile value={PUBLISHED_CASES.length} label="schools named by parents" />
+          <Tile value={PUBLISHED_CASES.reduce((n, c) => n + c.words.length, 0)} label="parents' quotes" />
+          <Tile value={totalVotes} label="upvotes (net)" />
+          <Tile value={totalComments} label="comments" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Panel title="Most upvoted" subtitle="Stories parents agree with most">
+            <RankedBars rows={caseBars("score", "upvotes")} empty="No votes yet." />
+          </Panel>
+          <Panel title="Most discussed" subtitle="Stories with the most comments">
+            <RankedBars rows={caseBars("comments", "comments")} empty="No comments yet." />
+          </Panel>
+        </div>
+        <Panel title="By region" subtitle="">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-muted">
+              <tr>
+                <th className="py-1 pr-2 font-normal">Region</th>
+                <th className="py-1 pr-2 text-right font-normal">Schools</th>
+                <th className="py-1 pr-2 text-right font-normal">Quotes</th>
+                <th className="py-1 pr-2 text-right font-normal">Upvotes</th>
+                <th className="py-1 text-right font-normal">Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              {regionRows.map((row) => (
+                <tr key={row.region} className="border-t border-border/60">
+                  <td className="py-2 pr-2">
+                    <Link href={`/cases?region=${regionSlug(row.region)}`} className="hover:underline">{row.region}</Link>
+                  </td>
+                  <td className="py-2 pr-2 text-right tabular-nums">{row.schools}</td>
+                  <td className="py-2 pr-2 text-right tabular-nums">{row.quotes}</td>
+                  <td className="py-2 pr-2 text-right tabular-nums">{row.votes}</td>
+                  <td className="py-2 text-right tabular-nums">{row.comments}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
+      </section>
+
       <header>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h2 className="text-xl font-semibold">Parents&apos; reports</h2>
         <p className="text-sm text-muted">Built from every report as soon as it&apos;s published. Not verified by FeeLeaks.</p>
       </header>
 

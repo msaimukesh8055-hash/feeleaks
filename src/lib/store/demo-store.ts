@@ -9,15 +9,28 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { slugify } from "../matching";
 import type { Evidence, Institution, InstitutionInput, Report, ReportFields, ReportWithInstitution } from "../types";
-import type { NewEvidenceFile, NewReport, PushSubscriptionRecord, Store } from "./types";
+import type {
+  NewComment,
+  NewEvidenceFile,
+  NewReport,
+  PushSubscriptionRecord,
+  Store,
+  StoredComment,
+  VoteValue,
+} from "./types";
 
 type StoredReport = Omit<Report, "meTooCount"> & { ownerKey: string; meTooKeys: string[] };
 type Follow = PushSubscriptionRecord & { institutionIds: string[] };
+
+type Vote = { target: string; key: string; value: 1 | -1 };
+type DemoComment = StoredComment & { ownerKey: string };
 
 type Data = {
   institutions: Institution[];
   reports: StoredReport[];
   follows: Follow[];
+  votes?: Vote[];
+  comments?: DemoComment[];
 };
 
 function dataDir(): string {
@@ -231,5 +244,85 @@ export class DemoStore implements Store {
     return this.mutate((data) => {
       data.follows = data.follows.filter((f) => f.endpoint !== endpoint);
     });
+  }
+
+  async getScores(targets: string[]) {
+    const votes = (await this.load()).votes ?? [];
+    const scores: Record<string, number> = {};
+    for (const t of targets) scores[t] = 0;
+    for (const v of votes) if (v.target in scores) scores[v.target] += v.value;
+    return scores;
+  }
+
+  async getMyVotes(keys: string[]) {
+    const votes = (await this.load()).votes ?? [];
+    const mine: Record<string, VoteValue> = {};
+    for (const v of votes) if (keys.includes(v.key)) mine[v.key] = v.value;
+    return mine;
+  }
+
+  setVote(target: string, key: string, value: VoteValue) {
+    return this.mutate((data) => {
+      const votes = (data.votes ?? []).filter((v) => !(v.target === target && v.key === key));
+      if (value !== 0) votes.push({ target, key, value });
+      data.votes = votes;
+      return votes.filter((v) => v.target === target).reduce((sum, v) => sum + v.value, 0);
+    });
+  }
+
+  private publicComment(c: DemoComment): StoredComment {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { ownerKey, ...rest } = c;
+    return rest;
+  }
+
+  async listComments(target: string) {
+    return ((await this.load()).comments ?? [])
+      .filter((c) => c.target === target)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .map((c) => this.publicComment(c));
+  }
+
+  async countComments(targets: string[]) {
+    const counts: Record<string, number> = {};
+    for (const t of targets) counts[t] = 0;
+    for (const c of (await this.load()).comments ?? []) if (c.target in counts && !c.deleted) counts[c.target]++;
+    return counts;
+  }
+
+  async getComment(id: string) {
+    const c = ((await this.load()).comments ?? []).find((x) => x.id === id);
+    return c ? this.publicComment(c) : null;
+  }
+
+  addComment(input: NewComment) {
+    return this.mutate((data) => {
+      const comment: DemoComment = {
+        id: input.id,
+        target: input.target,
+        parentId: input.parentId,
+        username: input.username,
+        body: input.body,
+        deleted: false,
+        createdAt: new Date().toISOString(),
+        ownerKey: input.ownerKey,
+      };
+      data.comments = [...(data.comments ?? []), comment];
+      return this.publicComment(comment);
+    });
+  }
+
+  deleteComment(id: string, ownerKey: string) {
+    return this.mutate((data) => {
+      const c = (data.comments ?? []).find((x) => x.id === id && x.ownerKey === ownerKey);
+      if (!c) return false;
+      c.deleted = true;
+      c.body = "";
+      return true;
+    });
+  }
+
+  async isCommentOwner(id: string, ownerKey: string) {
+    return ((await this.load()).comments ?? []).some((c) => c.id === id && c.ownerKey === ownerKey);
   }
 }

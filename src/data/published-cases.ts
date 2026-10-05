@@ -18,3 +18,9 @@ export const PUBLISHED_CASES: PublishedCase[] = PUBLIC_CASES.filter((c) => c.quo
   region: c.region,
   words: c.quotes.map(quoteWords),
 }));
+
+export function regionSlug(region: string): string {
+  return region.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export const REGIONS = [...new Set(PUBLISHED_CASES.map((c) => c.region))];

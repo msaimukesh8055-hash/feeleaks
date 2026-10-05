@@ -48,3 +48,12 @@ export function ownerKey(identity: Identity, reportId: string): string {
 export function meTooKey(identity: Identity, reportId: string): string {
   return deviceKey(identity.deviceId, "metoo", reportId);
 }
+
+// Per-target vote key: one vote per browser per story or comment.
+export function voteKey(identity: Identity, target: string): string {
+  return deviceKey(identity.deviceId, "vote", target);
+}
+
+export function commentOwnerKey(identity: Identity, commentId: string): string {
+  return deviceKey(identity.deviceId, "comment", commentId);
+}
