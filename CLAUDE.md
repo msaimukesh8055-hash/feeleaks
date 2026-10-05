@@ -2,7 +2,7 @@
 
 # FeeLeaks
 
-Anonymous fee-reporting website for Indian educational institutions. Spec: docs/PRD.md. Plan: docs/BUILD_PLAN.md.
+Anonymous fee-reporting website for Indian educational institutions. Spec: docs/PRD.md. Plan: docs/BUILD_PLAN.md. Project memory (decisions, status, next steps): docs/MEMORY.md — read it first and keep it current.
 
 ## Standing rules
 - Follow docs/BUILD_PLAN.md one step at a time. After each step, say how to run and test it.
