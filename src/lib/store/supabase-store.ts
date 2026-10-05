@@ -19,7 +19,15 @@ import type {
   ReportFields,
   ReportWithInstitution,
 } from "../types";
-import type { NewEvidenceFile, NewReport, PushSubscriptionRecord, Store } from "./types";
+import type {
+  NewComment,
+  NewEvidenceFile,
+  NewReport,
+  PushSubscriptionRecord,
+  Store,
+  StoredComment,
+  VoteValue,
+} from "./types";
 
 const BUCKET = "evidence";
 
@@ -314,4 +322,129 @@ export class SupabaseStore implements Store {
   async removeSubscription(endpoint: string) {
     check(await this.db.from("push_subscriptions").delete().eq("endpoint", endpoint));
   }
+
+  async getScores(targets: string[]) {
+    const scores: Record<string, number> = Object.fromEntries(targets.map((t) => [t, 0]));
+    if (targets.length === 0) return scores;
+    const rows = check(await this.db.from("vote_scores").select("target, score").in("target", targets)) as {
+      target: string;
+      score: number;
+    }[];
+    for (const r of rows) scores[r.target] = Number(r.score);
+    return scores;
+  }
+
+  async getMyVotes(keys: string[]) {
+    if (keys.length === 0) return {};
+    const rows = check(await this.db.from("votes").select("device_key, value").in("device_key", keys)) as {
+      device_key: string;
+      value: number;
+    }[];
+    return Object.fromEntries(rows.map((r) => [r.device_key, r.value as VoteValue]));
+  }
+
+  async setVote(target: string, key: string, value: VoteValue) {
+    if (value === 0) {
+      check(await this.db.from("votes").delete().eq("target", target).eq("device_key", key));
+    } else {
+      check(
+        await this.db.from("votes").upsert({ target, device_key: key, value }, { onConflict: "target,device_key" }),
+      );
+    }
+    return (await this.getScores([target]))[target] ?? 0;
+  }
+
+  async listComments(target: string) {
+    const rows = check(
+      await this.db
+        .from("comments")
+        .select("id, target, parent_id, username, body, deleted, created_at")
+        .eq("target", target)
+        .order("created_at"),
+    ) as CommentRow[];
+    return rows.map(toComment);
+  }
+
+  async countComments(targets: string[]) {
+    const counts: Record<string, number> = Object.fromEntries(targets.map((t) => [t, 0]));
+    if (targets.length === 0) return counts;
+    const rows = check(await this.db.from("comment_counts").select("target, count").in("target", targets)) as {
+      target: string;
+      count: number;
+    }[];
+    for (const r of rows) counts[r.target] = Number(r.count);
+    return counts;
+  }
+
+  async getComment(id: string) {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+    const row = check(
+      await this.db
+        .from("comments")
+        .select("id, target, parent_id, username, body, deleted, created_at")
+        .eq("id", id)
+        .maybeSingle(),
+    ) as CommentRow | null;
+    return row ? toComment(row) : null;
+  }
+
+  async addComment(input: NewComment) {
+    const row = check(
+      await this.db
+        .from("comments")
+        .insert({
+          id: input.id,
+          target: input.target,
+          parent_id: input.parentId,
+          username: input.username,
+          body: input.body,
+          owner_key: input.ownerKey,
+        })
+        .select("id, target, parent_id, username, body, deleted, created_at")
+        .single(),
+    ) as CommentRow;
+    return toComment(row);
+  }
+
+  async deleteComment(id: string, ownerKey: string) {
+    const rows = check(
+      await this.db
+        .from("comments")
+        .update({ deleted: true, body: "" })
+        .eq("id", id)
+        .eq("owner_key", ownerKey)
+        .select("id"),
+    ) as { id: string }[];
+    return rows.length > 0;
+  }
+
+  async isCommentOwner(id: string, ownerKey: string) {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return false;
+    const row = check(
+      await this.db.from("comments").select("id").eq("id", id).eq("owner_key", ownerKey).maybeSingle(),
+    );
+    return row !== null;
+  }
+}
+
+type CommentRow = {
+  id: string;
+  target: string;
+  parent_id: string | null;
+  username: string;
+  body: string;
+  deleted: boolean;
+  created_at: string;
+};
+
+function toComment(row: CommentRow): StoredComment {
+  return {
+    id: row.id,
+    target: row.target,
+    parentId: row.parent_id,
+    username: row.username,
+    body: row.deleted ? "" : row.body,
+    deleted: row.deleted,
+    createdAt: row.created_at,
+  };
 }
