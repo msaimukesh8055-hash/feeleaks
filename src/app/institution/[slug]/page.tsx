@@ -4,12 +4,14 @@
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FollowButton } from "@/components/follow-button";
 import { ReportCard } from "@/components/report-parts";
 import { cardClass } from "@/components/ui";
 import { YourOptions } from "@/components/your-options";
 import { declaredFeesFor, inflationFor } from "@/lib/accountability";
 import { feesByClassAndYear, formatPercent, formatRupees, formatRupeesShort, type Spread } from "@/lib/fees";
 import { summariseInstitution } from "@/lib/insights";
+import { pushEnabled, vapidPublicKey } from "@/lib/push";
 import { getStore } from "@/lib/store";
 import { FLAG_LABELS, INSTITUTION_TYPE_LABELS, type FlagKind } from "@/lib/types";
 
@@ -50,6 +52,11 @@ export default async function InstitutionPage(props: PageProps<"/institution/[sl
         </p>
         {institution.aliases.length > 0 && (
           <p className="mt-1 text-xs text-muted">Also written as: {institution.aliases.join(", ")}</p>
+        )}
+        {pushEnabled() && (
+          <div className="mt-3">
+            <FollowButton institutionId={institution.id} vapidPublicKey={vapidPublicKey()!} />
+          </div>
         )}
       </header>
 
