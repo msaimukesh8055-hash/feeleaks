@@ -3,7 +3,9 @@
 
 import Link from "next/link";
 import { ReportCard } from "@/components/report-parts";
+import { InlineMarkdown } from "@/components/inline-markdown";
 import { SearchForm } from "@/components/search-form";
+import { PUBLIC_CASES } from "@/data/public-cases";
 import { cardClass, primaryButton } from "@/components/ui";
 import { siteTotals } from "@/lib/insights";
 import { getStore } from "@/lib/store";
@@ -42,6 +44,25 @@ export default async function Home(props: PageProps<"/">) {
           <Headline value={totals.flagged} label="reports with questionable items" />
         </section>
       )}
+
+      <section>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-lg font-semibold">Fee cases</h2>
+          <Link href="/cases" className="text-sm text-muted hover:text-foreground">
+            All {PUBLIC_CASES.length} cases →
+          </Link>
+        </div>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {PUBLIC_CASES.slice(0, 8).map((c) => (
+            <li key={c.number}>
+              <Link href={`/cases#case-${c.number}`} className={`${cardClass} block text-sm hover:border-muted`}>
+                <InlineMarkdown text={c.title} />
+                <span className="block text-xs text-muted">{c.region}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section>
         <div className="mb-3 flex items-baseline justify-between">
