@@ -39,6 +39,11 @@ export default function CasesPage() {
                 <h3 className="font-semibold">
                   {c.number}. <InlineMarkdown text={c.title} />
                 </h3>
+                {c.quotes.map((quote, index) => (
+                  <blockquote key={index} className="mt-2 border-l-2 border-accent pl-3 text-sm leading-relaxed italic">
+                    <InlineMarkdown text={quote} />
+                  </blockquote>
+                ))}
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed">
                   {c.lines.map((line, index) => (
                     <li key={index} className="break-words">
