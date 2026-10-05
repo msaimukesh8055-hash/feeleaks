@@ -42,7 +42,7 @@ export interface Store {
   listReports(options?: { institutionId?: string; limit?: number }): Promise<ReportWithInstitution[]>;
   getReport(id: string): Promise<ReportWithInstitution | null>;
   createReport(report: NewReport, files: NewEvidenceFile[]): Promise<ReportWithInstitution>;
-  updateReport(id: string, institutionId: string, fields: ReportFields): Promise<void>;
+  updateReport(id: string, institutionId: string, originalText: string, fields: ReportFields): Promise<void>;
   deleteReport(id: string): Promise<void>;
   isReportOwner(id: string, ownerKey: string): Promise<boolean>;
 

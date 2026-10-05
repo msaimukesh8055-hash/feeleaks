@@ -5,7 +5,7 @@
 
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { slugify } from "../matching";
 import type { Evidence, Institution, InstitutionInput, Report, ReportFields, ReportWithInstitution } from "../types";
@@ -153,18 +153,24 @@ export class DemoStore implements Store {
     });
   }
 
-  updateReport(id: string, institutionId: string, fields: ReportFields) {
+  updateReport(id: string, institutionId: string, originalText: string, fields: ReportFields) {
     return this.mutate((data) => {
       const report = data.reports.find((r) => r.id === id);
       if (!report) throw new Error("Report not found");
-      Object.assign(report, fields, { institutionId, updatedAt: new Date().toISOString() });
+      Object.assign(report, fields, { institutionId, originalText, updatedAt: new Date().toISOString() });
     });
   }
 
-  deleteReport(id: string) {
-    return this.mutate((data) => {
+  async deleteReport(id: string) {
+    const removed = await this.mutate((data) => {
+      const report = data.reports.find((r) => r.id === id);
       data.reports = data.reports.filter((r) => r.id !== id);
+      return report?.evidence ?? [];
     });
+    for (const item of removed) {
+      await rm(path.join(dataDir(), "evidence", item.id), { force: true });
+      await rm(path.join(dataDir(), "evidence", `${item.id}.type`), { force: true });
+    }
   }
 
   async isReportOwner(id: string, ownerKey: string) {
