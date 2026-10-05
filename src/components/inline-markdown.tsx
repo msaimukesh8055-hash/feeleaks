@@ -30,3 +30,9 @@ export function InlineMarkdown({ text }: { text: string }) {
 export function stripMarkdown(text: string): string {
   return text.replace(TOKEN, (_m, b, i, l) => b ?? i ?? l ?? "");
 }
+
+// A parent's quote without the "— a parent, to <paper>" attribution.
+export function quoteWords(quote: string): string {
+  const match = /^“([\s\S]*)”\s*—/.exec(quote.trim());
+  return match ? match[1].trim() : quote.trim();
+}
