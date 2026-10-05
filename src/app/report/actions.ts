@@ -8,11 +8,12 @@ import { meTooKey, ownerKey, requireIdentity } from "@/lib/identity/session";
 import { allow } from "@/lib/rate-limit";
 import { reportDraftSchema } from "@/lib/report-schema";
 import { resolveInstitution } from "@/lib/reports";
-import { getStore } from "@/lib/store";
+import { canSaveReports, getStore } from "@/lib/store";
 
 export async function setMeToo(reportId: string, on: boolean): Promise<{ count: number } | { error: string }> {
   const identity = await requireIdentity();
   const store = getStore();
+  if (!canSaveReports()) return { error: "Not available until the database is connected." };
   if (!allow(`metoo:${identity.deviceId}`, 60, 60 * 60 * 1000)) return { error: "Please slow down." };
   if (await store.isReportOwner(reportId, ownerKey(identity, reportId))) {
     return { error: "You wrote this report." };

@@ -25,7 +25,7 @@ import {
   type ReportDraft,
 } from "@/lib/report-schema";
 import { institutionOptions, resolveInstitution, toOption } from "@/lib/reports";
-import { getStore } from "@/lib/store";
+import { canSaveReports, getStore } from "@/lib/store";
 import type { NewEvidenceFile } from "@/lib/store/types";
 import type { InstitutionOption, ReportFields } from "@/lib/types";
 
@@ -111,6 +111,7 @@ export type PublishResult = { ok: false; error: string };
 
 export async function publishReport(formData: FormData): Promise<PublishResult> {
   const identity = await requireIdentity();
+  if (!canSaveReports()) return { ok: false, error: "Publishing is switched off on the live site until the database is connected. Nothing was saved." };
   if (!allow(`publish:${identity.deviceId}`, 10, HOUR)) {
     return { ok: false, error: "Too many reports from this browser in the last hour. Please try again later." };
   }

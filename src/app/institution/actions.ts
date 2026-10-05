@@ -7,7 +7,7 @@ import { z } from "zod";
 import { requireIdentity } from "@/lib/identity/session";
 import { pushEnabled } from "@/lib/push";
 import { allow } from "@/lib/rate-limit";
-import { getStore } from "@/lib/store";
+import { canSaveReports, getStore } from "@/lib/store";
 
 const subscriptionSchema = z.object({
   endpoint: z.string().url().startsWith("https://").max(1000),
@@ -16,7 +16,7 @@ const subscriptionSchema = z.object({
 
 export async function follow(institutionId: string, subscription: unknown): Promise<{ ok: boolean; error?: string }> {
   const identity = await requireIdentity();
-  if (!pushEnabled()) return { ok: false, error: "Notifications aren't set up yet." };
+  if (!pushEnabled() || !canSaveReports()) return { ok: false, error: "Notifications aren't set up yet." };
   if (!allow(`follow:${identity.deviceId}`, 30, 60 * 60 * 1000)) return { ok: false, error: "Please slow down." };
   const parsed = subscriptionSchema.safeParse(subscription);
   if (!parsed.success) return { ok: false, error: "This browser's notification details weren't valid." };
