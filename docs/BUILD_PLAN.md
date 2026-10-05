@@ -8,8 +8,8 @@ Status: **Step 0 code done** (Next.js app, dark theme, placeholder page, `.env.e
 | --- | --- | --- |
 | Website | Next.js + TypeScript + Tailwind, dark theme, mobile-first | Free |
 | Hosting | Vercel free tier (`feeleaks.vercel.app` if available) | Free |
-| Database + evidence files | Supabase free tier (Postgres + storage) | Free |
-| Anonymous identity | Supabase anonymous sign-in per browser + random funny username | Free |
+| Database + evidence files | Supabase free tier (Postgres + storage). Until it's connected, a demo store keeps data in a local file | Free |
+| Anonymous identity | Signed private browser cookie (random device ID + funny usernames). The device ID is never stored next to reports | Free |
 | AI structuring + flags + dashboard | Claude Haiku 4.5, called from the server only (key never in the browser) | Fraction of a rupee per report |
 | Emailing | Gmail compose link, pre-filled | Free |
 | Letters / RTI | Generated in the browser, downloaded by the parent | Free |
@@ -24,7 +24,8 @@ Status: **Step 0 code done** (Next.js app, dark theme, placeholder page, `.env.e
 
 **Step 1 — Database and usernames**
 - Tables: institutions (name, other spellings, type, city, state, board), reports (username, original text, structured fields, flags, created date), fee components, evidence files, "me too" confirmations (one per device per report)
-- Accountability tables, **empty until filled from verified sources**: rules (state/board, summary, official source link), authorities (state/board, who to complain to, official link), declared fees (institution, year, class, amount, source link, date checked), inflation (year, CPI %, source link)
+- Accountability data, **empty until filled from verified sources**: rules, authorities, declared fees, inflation and email recipients. Kept as reviewed files in `src/data/` (every entry needs an official source link), so each change can be checked before it goes live
+- Database schema for Supabase in `supabase/schema.sql`
 - First visit creates a hidden anonymous ID and a funny username, kept on that browser. A device can hold more than one username (for "post under a fresh name")
 - Test: open the site, see your username; open in another browser, get a different one
 
