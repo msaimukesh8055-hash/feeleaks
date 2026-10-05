@@ -180,3 +180,6 @@ export type InstitutionInput = {
 };
 
 export type ReportWithInstitution = Report & { institution: Institution };
+
+// The small slice of an institution the browser needs for choosing one.
+export type InstitutionOption = Pick<Institution, "id" | "slug" | "name" | "city" | "state" | "type">;

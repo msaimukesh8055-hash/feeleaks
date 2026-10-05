@@ -123,7 +123,7 @@ export class DemoStore implements Store {
   }
 
   async createReport(input: NewReport, files: NewEvidenceFile[]) {
-    const id = randomUUID();
+    const id = input.id;
     const evidence: Evidence[] = [];
     if (files.length > 0) await mkdir(path.join(dataDir(), "evidence"), { recursive: true });
     for (const file of files) {

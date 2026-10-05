@@ -16,6 +16,7 @@ export type NewEvidenceFile = {
 };
 
 export type NewReport = {
+  id: string;
   institutionId: string;
   username: string;
   originalText: string;
