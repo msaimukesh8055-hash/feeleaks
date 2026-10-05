@@ -25,6 +25,7 @@ export const metadata: Metadata = {
   },
   description:
     "Parents and students anonymously share the fees schools, colleges, universities and tuition centres actually demand.",
+  openGraph: { siteName: "FeeLeaks", locale: "en_IN", type: "website" },
 };
 
 export const viewport: Viewport = {

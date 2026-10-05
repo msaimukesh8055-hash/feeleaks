@@ -1,6 +1,6 @@
 # FeeLeaks — Build Plan
 
-Status: **Step 0 code done** (Next.js app, dark theme, placeholder page, `.env.example`). Supabase project and Vercel deploy still to do. Plan updated Oct 5, 2026 for PRD v3 (accountability features).
+Status (Oct 5, 2026): **Steps 1–8 built** on top of a demo store. Waiting on: Supabase (data that lasts), an Anthropic API key (AI structuring), VAPID keys (follow notifications), and Step 9 launch prep. Plan updated Oct 5, 2026 for PRD v3 (accountability features).
 
 ## Stack
 

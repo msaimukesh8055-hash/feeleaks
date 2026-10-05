@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { DeleteReportButton } from "@/components/delete-report-button";
 import { EmailReportButton } from "@/components/email-report-button";
 import { MeTooButton } from "@/components/me-too-button";
+import { ShareButton } from "@/components/share-button";
 import {
   EvidenceGallery,
   FeeBreakdown,
@@ -90,6 +91,11 @@ export default async function ReportPage(props: PageProps<"/report/[id]">) {
       <EvidenceGallery evidence={report.evidence} />
 
       <MeTooButton reportId={report.id} initialCount={report.meTooCount} initialActive={meTooActive} disabled={isOwner} />
+
+      <ShareButton
+        url={`${siteUrl()}/report/${report.id}`}
+        text={`Fees reported for ${institution.name}, ${institution.city} on FeeLeaks:`}
+      />
 
       <YourOptions institution={institution} reportId={report.id} />
 
