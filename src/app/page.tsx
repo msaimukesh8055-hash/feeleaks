@@ -1,27 +1,78 @@
 // src/app/page.tsx
-export default function Home() {
+// Home: "Leak a fee", search, headline numbers and the latest reports.
+
+import Link from "next/link";
+import { ReportCard } from "@/components/report-parts";
+import { SearchForm } from "@/components/search-form";
+import { cardClass, primaryButton } from "@/components/ui";
+import { siteTotals } from "@/lib/insights";
+import { getStore } from "@/lib/store";
+
+export default async function Home(props: PageProps<"/">) {
+  const { deleted } = await props.searchParams;
+  const reports = await getStore().listReports();
+  const totals = siteTotals(reports);
+  const latest = reports.slice(0, 20);
+
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-4 py-16">
-      <div className="w-full max-w-xl text-center">
-        <p className="font-mono text-sm uppercase tracking-widest text-accent">
-          Coming soon
-        </p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          Fee<span className="text-accent">Leaks</span>
+    <div className="space-y-10">
+      {deleted && <p className={`${cardClass} text-sm`}>Your report was deleted.</p>}
+
+      <section className="py-4 text-center sm:py-8">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
+          What institutions <span className="text-accent">really</span> charge
         </h1>
-        <p className="mt-4 text-lg leading-relaxed text-muted">
-          What schools, colleges, universities and tuition centres really
-          charge — shared anonymously by the parents and students who paid.
+        <p className="mx-auto mt-3 max-w-xl text-muted sm:text-lg">
+          Parents and students anonymously share the fees schools, colleges, universities and tuition centres
+          actually asked them to pay — so the next family knows before they walk in.
         </p>
-        <button
-          type="button"
-          disabled
-          className="mt-8 h-12 w-full rounded-full bg-accent px-6 font-semibold text-accent-foreground opacity-60 sm:w-auto"
-        >
+        <Link href="/leak" className={`${primaryButton} mt-6 w-full sm:w-auto`}>
           Leak a fee
-        </button>
-        <p className="mt-3 text-sm text-muted">Reporting opens shortly.</p>
-      </div>
-    </main>
+        </Link>
+        <div className="mx-auto mt-6 max-w-xl">
+          <SearchForm />
+        </div>
+      </section>
+
+      {totals.reports > 0 && (
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Headline value={totals.reports} label="reports" />
+          <Headline value={totals.institutions} label="institutions" />
+          <Headline value={totals.meToos} label="“me too” confirmations" />
+          <Headline value={totals.flagged} label="reports with questionable items" />
+        </section>
+      )}
+
+      <section>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-lg font-semibold">Latest reports</h2>
+          {totals.reports > 0 && (
+            <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
+              Dashboard →
+            </Link>
+          )}
+        </div>
+        {latest.length === 0 ? (
+          <p className={`${cardClass} text-sm text-muted`}>
+            No reports yet. Be the first to share what you were asked to pay.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {latest.map((report) => (
+              <ReportCard key={report.id} report={report} />
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Headline({ value, label }: { value: number; label: string }) {
+  return (
+    <div className={cardClass}>
+      <p className="text-2xl font-bold text-accent">{value.toLocaleString("en-IN")}</p>
+      <p className="text-xs text-muted">{label}</p>
+    </div>
   );
 }

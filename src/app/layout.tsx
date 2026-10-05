@@ -1,6 +1,10 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { DemoBanner } from "@/components/demo-banner";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,9 +18,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FeeLeaks — what institutions really charge",
+  metadataBase: new URL(siteUrl()),
+  title: {
+    default: "FeeLeaks — what institutions really charge",
+    template: "%s · FeeLeaks",
+  },
   description:
     "Parents and students anonymously share the fees schools, colleges, universities and tuition centres actually demand.",
+  openGraph: { siteName: "FeeLeaks", locale: "en_IN", type: "website" },
 };
 
 export const viewport: Viewport = {
@@ -29,7 +38,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <DemoBanner />
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+        <SiteFooter />
+      </body>
     </html>
   );
 }
