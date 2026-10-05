@@ -9,7 +9,7 @@ export async function SiteHeader() {
   const username = identity?.names[0];
 
   return (
-    <header className="border-b border-border bg-background/95">
+    <header className="border-b border-border bg-background/95 print:hidden">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link href="/" className="text-xl font-bold tracking-tight">
           Fee<span className="text-accent">Leaks</span>

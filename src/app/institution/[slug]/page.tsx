@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReportCard } from "@/components/report-parts";
 import { cardClass } from "@/components/ui";
+import { YourOptions } from "@/components/your-options";
 import { declaredFeesFor, inflationFor } from "@/lib/accountability";
 import { feesByClassAndYear, formatPercent, formatRupees, formatRupeesShort, type Spread } from "@/lib/fees";
 import { summariseInstitution } from "@/lib/insights";
@@ -193,6 +194,8 @@ export default async function InstitutionPage(props: PageProps<"/institution/[sl
           </table>
         )}
       </section>
+
+      <YourOptions institution={institution} reportId={null} />
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">All reports</h2>

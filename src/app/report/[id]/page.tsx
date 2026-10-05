@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteReportButton } from "@/components/delete-report-button";
+import { EmailReportButton } from "@/components/email-report-button";
 import { MeTooButton } from "@/components/me-too-button";
 import {
   EvidenceGallery,
@@ -14,8 +15,12 @@ import {
   ReportMeta,
 } from "@/components/report-parts";
 import { cardClass, secondaryButton } from "@/components/ui";
+import { YourOptions } from "@/components/your-options";
+import { RECIPIENTS } from "@/data/recipients";
 import { formatRupees, yearOneCost } from "@/lib/fees";
 import { meTooKey, ownerKey, readIdentity } from "@/lib/identity/session";
+import { emailDraft } from "@/lib/letters";
+import { siteUrl } from "@/lib/site";
 import { getStore } from "@/lib/store";
 
 export async function generateMetadata(props: PageProps<"/report/[id]">): Promise<Metadata> {
@@ -41,6 +46,10 @@ export default async function ReportPage(props: PageProps<"/report/[id]">) {
   const isOwner = identity ? await store.isReportOwner(id, ownerKey(identity, id)) : false;
   const meTooActive = identity ? await store.hasMeToo(id, meTooKey(identity, id)) : false;
   const { institution } = report;
+  const email = emailDraft(report, institution, `${siteUrl()}/report/${report.id}`);
+  const recipients = RECIPIENTS.filter(
+    (r) => r.states === null || r.states.some((s) => s.toLowerCase() === institution.state.toLowerCase()),
+  ).map((r) => r.email);
 
   return (
     <article className="mx-auto max-w-2xl space-y-6">
@@ -81,6 +90,10 @@ export default async function ReportPage(props: PageProps<"/report/[id]">) {
       <EvidenceGallery evidence={report.evidence} />
 
       <MeTooButton reportId={report.id} initialCount={report.meTooCount} initialActive={meTooActive} disabled={isOwner} />
+
+      <YourOptions institution={institution} reportId={report.id} />
+
+      <EmailReportButton subject={email.subject} body={email.body} recipients={recipients} />
 
       {isOwner && (
         <section className={cardClass}>
