@@ -15,6 +15,7 @@ export async function SiteHeader() {
           Fee<span className="text-accent">Leaks</span>
         </Link>
         <nav className="ml-2 hidden gap-4 text-sm text-muted sm:flex">
+          <Link href="/cases" className="hover:text-foreground">Cases</Link>
           <Link href="/search" className="hover:text-foreground">Search</Link>
           <Link href="/dashboard" className="hover:text-foreground">Dashboard</Link>
           <Link href="/about" className="hover:text-foreground">About</Link>
@@ -37,7 +38,8 @@ export async function SiteHeader() {
         </div>
       </div>
       <nav className="mx-auto flex max-w-5xl gap-5 px-4 pb-3 text-sm text-muted sm:hidden">
-        <Link href="/search" className="hover:text-foreground">Search</Link>
+        <Link href="/cases" className="hover:text-foreground">Cases</Link>
+          <Link href="/search" className="hover:text-foreground">Search</Link>
         <Link href="/dashboard" className="hover:text-foreground">Dashboard</Link>
         <Link href="/about" className="hover:text-foreground">About</Link>
         {username && <span className="ml-auto truncate font-mono text-xs leading-5">{username}</span>}

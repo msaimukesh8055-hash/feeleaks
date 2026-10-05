@@ -96,5 +96,62 @@ alter table me_toos enable row level security;
 alter table push_subscriptions enable row level security;
 alter table follows enable row level security;
 
--- Evidence files go in a private storage bucket named "evidence"; the site serves them
--- through its own /evidence/<id> route.
+-- Evidence files go in a private storage bucket; the site serves them through its own
+-- /evidence/<id> route.
+insert into storage.buckets (id, name, public) values ('evidence', 'evidence', false)
+on conflict (id) do nothing;
+
+-- Fee items and flags of a report, replaced as a whole (used by create and update).
+create or replace function replace_report_details(r uuid, p jsonb) returns void
+language plpgsql as $$
+begin
+  delete from fee_components where report_id = r;
+  delete from report_flags where report_id = r;
+  insert into fee_components (report_id, position, kind, label, amount, frequency)
+  select r, c.ord::int, c.value->>'kind', c.value->>'label', (c.value->>'amount')::bigint, c.value->>'frequency'
+  from jsonb_array_elements(coalesce(p->'components', '[]'::jsonb)) with ordinality as c(value, ord);
+  insert into report_flags (report_id, kind, note)
+  select r, f->>'kind', f->>'note'
+  from jsonb_array_elements(coalesce(p->'flags', '[]'::jsonb)) as f;
+end $$;
+
+-- Creates a report with its fee items, flags and evidence in one transaction.
+create or replace function create_report(p jsonb) returns void
+language plpgsql as $$
+declare
+  r uuid := (p->>'id')::uuid;
+begin
+  insert into reports (id, institution_id, username, original_text, academic_year, class_or_course,
+                       admission_type, reported_total, hike_percent, owner_key)
+  values (r, (p->>'institution_id')::uuid, p->>'username', p->>'original_text', p->>'academic_year',
+          p->>'class_or_course', p->>'admission_type', (p->>'reported_total')::bigint,
+          (p->>'hike_percent')::numeric, p->>'owner_key');
+  perform replace_report_details(r, p);
+  insert into evidence_files (id, report_id, kind, mime_type, size, storage_path)
+  select (e->>'id')::uuid, r, e->>'kind', e->>'mime_type', (e->>'size')::int, e->>'storage_path'
+  from jsonb_array_elements(coalesce(p->'evidence', '[]'::jsonb)) as e;
+end $$;
+
+-- Updates a report's text and structured fields in one transaction.
+create or replace function update_report(p jsonb) returns void
+language plpgsql as $$
+declare
+  r uuid := (p->>'id')::uuid;
+begin
+  update reports set
+    institution_id = (p->>'institution_id')::uuid,
+    original_text = p->>'original_text',
+    academic_year = p->>'academic_year',
+    class_or_course = p->>'class_or_course',
+    admission_type = p->>'admission_type',
+    reported_total = (p->>'reported_total')::bigint,
+    hike_percent = (p->>'hike_percent')::numeric,
+    updated_at = now()
+  where id = r;
+  perform replace_report_details(r, p);
+end $$;
+
+-- Only the server (secret key) may call these.
+revoke execute on function replace_report_details(uuid, jsonb) from public, anon, authenticated;
+revoke execute on function create_report(jsonb) from public, anon, authenticated;
+revoke execute on function update_report(jsonb) from public, anon, authenticated;

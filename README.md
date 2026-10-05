@@ -16,6 +16,10 @@ npm run dev
 Open http://localhost:3000.
 
 Without a database the site runs in **demo mode**: data is kept in `.data/demo.json` (delete the folder to start fresh).
+On Vercel, demo mode can't share data between pages, so publishing is switched off there until Supabase is connected.
+
+To connect Supabase: run `supabase/schema.sql` once in the Supabase SQL editor, then set `SUPABASE_URL` and
+`SUPABASE_SECRET_KEY`.
 Without `ANTHROPIC_API_KEY`, reporters fill in the fee breakdown by hand.
 Without VAPID keys, the "Follow" button is hidden.
 

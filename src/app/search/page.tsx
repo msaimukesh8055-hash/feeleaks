@@ -3,7 +3,9 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { InlineMarkdown, stripMarkdown } from "@/components/inline-markdown";
 import { SearchForm } from "@/components/search-form";
+import { PUBLIC_CASES } from "@/data/public-cases";
 import { cardClass } from "@/components/ui";
 import { formatRupeesShort } from "@/lib/fees";
 import { summariseInstitution } from "@/lib/insights";
@@ -20,6 +22,12 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const institutions = await store.listInstitutions();
   const results = q ? search(institutions, q) : [];
   const reports = results.length > 0 ? await store.listReports() : [];
+  const nq = normaliseName(q);
+  const caseResults = q
+    ? PUBLIC_CASES.filter((c) =>
+        normaliseName(stripMarkdown([c.title, c.region, ...c.lines].join(" "))).includes(nq),
+      )
+    : [];
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -49,7 +57,21 @@ export default async function SearchPage(props: PageProps<"/search">) {
           );
         })}
       </ul>
-      {q && results.length === 0 && (
+      {caseResults.length > 0 && (
+        <section>
+          <h2 className="mb-2 font-semibold">Fee cases</h2>
+          <ul className="space-y-2">
+            {caseResults.map((c) => (
+              <li key={c.number}>
+                <Link href={`/cases#case-${c.number}`} className={`${cardClass} block text-sm hover:border-muted`}>
+                  {c.number}. <InlineMarkdown text={c.title} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {q && results.length === 0 && caseResults.length === 0 && (
         <p className={`${cardClass} text-sm`}>
           Nothing yet. <Link href="/leak" className="text-accent underline">Be the first to report this institution.</Link>
         </p>
